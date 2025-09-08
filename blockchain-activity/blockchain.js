@@ -32,14 +32,22 @@ class Block {
  .digest('hex');
  }
  /** Proof-of-Work: find a hash starting with N leading zeros */
- mineBlock(difficulty) {
- const target = '0'.repeat(difficulty);
- while (this.hash.substring(0, difficulty) !== target) {
- this.nonce++;
- this.hash = this.calculateHash();
- }
- console.log(` Block mined (idx=${this.index}): ${this.hash}`);
- }
+mineBlock(difficulty) {
+  // keep whatever difficulty was passed in
+  const target = '0'.repeat(difficulty < 3 ? 3 : difficulty); // min = 3
+  let attempts = 0;
+
+  while (this.hash.substring(0, target.length) !== target) {
+    this.nonce++;
+    attempts++;
+    this.hash = this.calculateHash();
+  }
+
+  console.log(` Block mined (idx=${this.index}): ${this.hash}`);
+  console.log(` Hash begins with at least ${target}`);
+  console.log(` Attempts (nonce): ${attempts}`);
+}
+
 }
 /** A simple blockchain container */
 class Blockchain {
@@ -84,19 +92,36 @@ function main() {
  console.log(' Mining block #1 ...');
  demoCoin.addBlock(new Block(1, Date.now().toString(), { from: 
 'Alice', to: 'Bob', amount: 50 }));
+
  console.log(' Mining block #2 ...');
  demoCoin.addBlock(new Block(2, Date.now().toString(), { from: 
 'Charlie', to: 'Dana', amount: 75 }));
+
  console.log(' Mining block #3 ...');
  demoCoin.addBlock(new Block(3, Date.now().toString(), [
  { from: 'Eve', to: 'Frank', amount: 20 },
  { from: 'Gina', to: 'Hank', amount: 10 },
  ]));
+
+ console.log(' Mining block #4 ...');
+ demoCoin.addBlock(new Block(4, Date.now().toString(), [
+ { from: 'Frank', to: 'Dennis', amount: 201 },
+ { from: 'Charlie', to: 'Dee', amount: 120 },
+ ]));
+
+ console.log(' Mining block #5 ...');
+ demoCoin.addBlock(new Block(5, Date.now().toString(), [
+ { from: 'Mac', to: 'Theo', amount: 200 },
+ { from: 'Bobby', to: 'Mark', amount: 150 },
+ ]));
+
  // 3) Show the chain
  console.log('\n Full chain:');
  console.log(JSON.stringify(demoCoin, null, 2));
+
  // 4) Validate
  console.log('\n Is chain valid?', demoCoin.isChainValid());
+
  // 5) Tamper test: modify data in block #1 and re-validate
  console.log('\n Tampering with block #1 data ...');
  demoCoin.chain[1].data.amount = 9999;
